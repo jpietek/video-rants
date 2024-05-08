@@ -8,14 +8,17 @@ https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/subprojects/gst-p
 How tu put here EIA608 two byte captions?
 https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/subprojects/gst-plugins-bad/sys/nvcodec/gstnvencoder.cpp#L1880
 
+```
 The first byte of each triplet should look like that:
 // padding     | valid | NTSC_FIELD0 triplet for raw eia608 type
 // 1 1 1 1 1   | 1     | 0 0
+```
 
 --
 
 # timestamp weirdness
 
+```
 static uint64 get_brt_from_wct_ns (AmgCapsequoSubtitleReceiver *filter, guint64 wct_ns)
 {
     int64 wct_map_ns = 0, rt_map_ns = 0, ret_brt_ns = 0;
@@ -28,6 +31,7 @@ static uint64 get_brt_from_wct_ns (AmgCapsequoSubtitleReceiver *filter, guint64 
 	// why? how could we fix that?
     return rt_map_ns + (wct_ns - wct_map_ns);
 }
+```
 
 --
 
@@ -35,6 +39,7 @@ static uint64 get_brt_from_wct_ns (AmgCapsequoSubtitleReceiver *filter, guint64 
 
 https://docs.obsproject.com/reference-libobs-util-circlebuf
 
+```
 static struct obs_source_frame* replay_filter_video(void *data, struct obs_source_frame *frame) {
     struct replay_filter *filter = data;
 
@@ -46,11 +51,14 @@ static struct obs_source_frame* replay_filter_video(void *data, struct obs_sourc
     pthread_mutex_lock(&filter->mutex);
     circlebuf_push_back(&filter->video_frames, &new_frame, sizeofOBS replays plugin:
 }
+```
 
+```
 struct replay {
 	// TODO: what would be the type here? video_frames;
 };
-
+```
+```
 void replay_retrieve(struct replay_source *context)
 {
     obs_source_t *s = obs_get_source_by_name(context->source_name);
@@ -70,6 +78,7 @@ void replay_retrieve(struct replay_source *context)
     }
 
     pthread_mutex_unlock(&vf->mutex);
+```
 
 --
 
