@@ -49,7 +49,6 @@ static struct obs_source_frame* replay_filter_video(void *data, struct obs_sourc
 
 struct replay {
 	// TODO: what would be the type here? video_frames;
-    // (...)
 };
 
 void replay_retrieve(struct replay_source *context)
