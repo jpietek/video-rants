@@ -21,15 +21,14 @@ The first byte of each triplet should look like that:
 ```
 static uint64 get_brt_from_wct_ns (AmgCapsequoSubtitleReceiver *filter, guint64 wct_ns)
 {
-    int64 wct_map_ns = 0, rt_map_ns = 0, ret_brt_ns = 0;
-    get_wct_rt_map_ns(filter, &wct_map_ns, &rt_map_ns);
-
-	// wct_ns - timestamp from capsequo/alta captioning services (epoch, ns tb)
-	// wct_map_ns - wallclock timestamp at the receiving instance (epoch, ns tb)
-	// rt_map_ns - gstreamre pipeline clock timestamp in ns (starting from 0, ns tb)
-	// the result of this arithmetic was a huge epoch timestamp number during the first few seconds after pipeline start
-	// why? how could we fix that?
-    return rt_map_ns + (wct_ns - wct_map_ns);
+  int64 wct_map_ns = 0, rt_map_ns = 0, ret_brt_ns = 0;
+  get_wct_rt_map_ns(filter, &wct_map_ns, &rt_map_ns);
+  // wct_ns - timestamp from capsequo/alta captioning services (epoch, ns tb)
+  // wct_map_ns - wallclock timestamp at the receiving instance (epoch, ns tb)
+  // rt_map_ns - gstreamre pipeline clock timestamp in ns (starting from 0, ns tb)
+  // the result of this arithmetic was a huge epoch timestamp number during the first few seconds after pipeline start
+  // why? how could we fix that
+  return rt_map_ns + (wct_ns - wct_map_ns);
 }
 ```
 
@@ -54,10 +53,27 @@ static struct obs_source_frame* replay_filter_video(void *data, struct obs_sourc
 ```
 
 ```
+  struct obs_source_frame *cur_frame
+  circlebuf_peek_back(&filter->video_frames, &output, sizeof(struct obs_source_frame *));
+  uint64_t last_timestamp = output->timestamp;
+
+  circlebuf_peek_front(&filter->video_frames, &output, sizeof(struct obs_source_frame*));
+  uint64_t cur_duration = last_timestamp - output->timestamp;
+
+  while (cur_duration > 0 && cur_duration > filter->duration) {
+    circlebuf_pop_front(&filter->video_frames, NULL, sizeof(struct obs_source_frame *));
+    if (os_atomic_dec_long(&output->refs) <= 0) {
+      obs_source_frame_destroy(output);
+    }
+  }
+```
+
+```
 struct replay {
 	// TODO: what would be the type here? video_frames;
 };
 ```
+
 ```
 void replay_retrieve(struct replay_source *context)
 {
@@ -72,7 +88,6 @@ void replay_retrieve(struct replay_source *context)
 
     for (int i = 0; i < new_replay.video_frame_count; i++) {
         // fetch the pointers to frame pointers from the circlebuf
-
         // TODO: fill this part with code
         // the retrieve method needs to be fast, in terms of 10s of millis - the user can spam the grab replay button with HW devices
     }
